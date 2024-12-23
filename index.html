@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flashcard System</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+      }
+
+      .container {
+        text-align: center;
+        max-width: 1000px;
+        width: 100%;
+        padding: 20px;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      }
+
+      input {
+        padding: 10px;
+        font-size: 16px;
+        margin: 10px;
+        width: 250px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+
+      button {
+        padding: 10px;
+        font-size: 16px;
+        cursor: pointer;
+        border: none;
+        background-color: #4caf50;
+        color: white;
+        border-radius: 5px;
+      }
+
+      button:hover {
+        background-color: #45a049;
+      }
+
+      .columns {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+      }
+
+      .column {
+        width: 30%;
+        padding: 10px;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+      }
+
+      h2 {
+        font-size: 18px;
+        color: #333;
+      }
+
+      p {
+        font-size: 16px;
+        color: #333;
+      }
+
+      .flashcard-container {
+        text-align: center;
+        width: 400px;
+        padding: 20px;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        margin: 0 auto;
+      }
+
+      .flashcard {
+        margin: 20px;
+        padding: 20px;
+        background-color: #e0e0e0;
+        border-radius: 10px;
+        font-size: 24px;
+        cursor: pointer;
+      }
+
+      .flashcard .front,
+      .flashcard .back {
+        display: none;
+      }
+
+      .flashcard.show-front .front,
+      .flashcard.show-back .back {
+        display: block;
+      }
+
+      .buttons {
+        margin-top: 20px;
+      }
+
+      .buttons button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        border: none;
+        background-color: #4caf50;
+        color: white;
+        border-radius: 5px;
+        margin: 10px;
+      }
+
+      .buttons button:hover {
+        background-color: #45a049;
+      }
+
+      .back-button {
+        margin-top: 20px;
+        padding: 10px;
+        font-size: 16px;
+        cursor: pointer;
+        border: none;
+        background-color: #ff5733;
+        color: white;
+        border-radius: 5px;
+      }
+
+      .back-button:hover {
+        background-color: #ff3300;
+      }
+
+      .matching-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        margin-top: 20px;
+      }
+
+      .matching-item {
+        width: 45%;
+        margin: 10px 0;
+        padding: 10px;
+        background-color: #e0e0e0;
+        border-radius: 5px;
+        text-align: center;
+        cursor: pointer;
+      }
+
+      .selected {
+        background-color: #4caf50;
+        color: white;
+      }
+
+      .match-button {
+        margin-top: 20px;
+      }
+      .play {
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <!-- Trang chính -->
+      <div class="container" id="main-page">
+        <h1>Học Lặp Lại Ngắt Quãng</h1>
+        <button id="reset-button" onclick="resetApplication()">Reset</button>
+
+        <input type="text" id="vocab-input" placeholder="Nhập từ vựng..." />
+        <input
+          type="text"
+          id="meaning-input"
+          placeholder="Nhập nghĩa từ vựng..."
+        />
+        <button onclick="addVocabulary()">Thêm từ vựng</button>
+
+        <div class="columns">
+          <div class="column" id="new-vocab">
+            <h2>Mới học</h2>
+            <p id="new-count">0 từ</p>
+            <button onclick="openFlashcard('new')">Xem Flashcard</button>
+          </div>
+          <div class="column" id="learning-vocab">
+            <h2>Đang học</h2>
+            <p id="learning-count">0 từ</p>
+            <button onclick="openFlashcard('learning')">Xem Flashcard</button>
+          </div>
+          <div class="column" id="learned-vocab">
+            <h2>Đã học</h2>
+            <p id="learned-count">0 từ</p>
+            <button onclick="viewLearnedWords()">Xem danh sách</button>
+            <button class="play" onclick="startMatching()">
+              Chơi Matching
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trang Matching -->
+      <div class="container" id="matching-page" style="display: none">
+        <h1>Matching</h1>
+        <div class="matching-container" id="matching-container"></div>
+        <button class="back-button" onclick="goBack()">Quay lại</button>
+      </div>
+
+      <!-- Trang Flashcard -->
+      <div
+        class="flashcard-container"
+        id="flashcard-page"
+        style="display: none"
+      >
+        <h1>Flashcard</h1>
+        <div class="flashcard" id="flashcard">
+          <div class="front">
+            <p id="vocab-word">Từ vựng</p>
+          </div>
+          <div class="back">
+            <p id="vocab-meaning">Nghĩa từ vựng</p>
+          </div>
+        </div>
+
+        <div class="buttons">
+          <button onclick="markLearned()">Đã thuộc</button>
+          <button onclick="markLearning()">Đang học</button>
+          <button onclick="prevFlashcard()">Thẻ trước</button>
+          <button onclick="nextFlashcard()">Thẻ kế tiếp</button>
+        </div>
+
+        <button class="back-button" onclick="goBack()">Quay lại</button>
+      </div>
+
+      <!-- Trang danh sách đã học -->
+      <div class="container" id="learned-page" style="display: none">
+        <h1>Danh sách từ đã học</h1>
+        <ul id="learned-list"></ul>
+        <button class="back-button" onclick="goBack()">Quay lại</button>
+      </div>
+    </div>
+    <div>
+      <h3>Đặt lịch gửi thông báo</h3>
+      <input id="notification-title" placeholder="Tiêu đề thông báo" />
+      <input id="notification-body" placeholder="Nội dung thông báo" />
+      <input id="notification-token" placeholder="Token người nhận" />
+      <input id="notification-time" type="datetime-local" />
+      <button onclick="scheduleNotification()">Đặt lịch</button>
+    </div>
+    <script src="haha.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging.js"></script>
+    <script type="module" src="main.js"></script>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("./firebase-messaging-sw.js")
+          .then((registration) => {
+            console.log("Service Worker đăng ký thành công:", registration);
+          })
+          .catch((error) => {
+            console.error("Đăng ký Service Worker thất bại:", error);
+          });
+      }
+    </script>
+
+    <script type="module">
+      import { initializeApp } from "firebase/app";
+      import { getMessaging, getToken, onMessage } from "firebase/messaging";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyCIAEvk6L9v5dHyec3Y-HqeERqZicXTIpg",
+        authDomain: "mynotificationproject-73ac9.firebaseapp.com",
+        projectId: "mynotificationproject-73ac9",
+        storageBucket: "mynotificationproject-73ac9.firebasestorage.app",
+        messagingSenderId: "926597572713",
+        appId: "1:926597572713:web:200ba3817f484562805af8",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const messaging = getMessaging(app);
+
+      const requestPermission = async () => {
+        try {
+          const token = await getToken(messaging, {
+            vapidKey:
+              "BHm4KpK7l2sYVeDQ5Iv5nXyv7Dw2KiMZiukkxUFG4LMvufhHGJQwOxz8x2qraHPcSa6nVBK2KPAQr1uG4r5Ush8",
+          });
+          if (token) {
+            console.log("Token nhận được:", token);
+          } else {
+            console.log("Không thể nhận token.");
+          }
+        } catch (error) {
+          console.error("Lỗi khi yêu cầu quyền:", error);
+        }
+      };
+
+      onMessage(messaging, (payload) => {
+        console.log("Thông báo nhận được: ", payload);
+        alert(`Notification: ${payload.notification.title}`);
+      });
+
+      requestPermission();
+    </script>
+
+    <script>
+      function scheduleNotification() {
+        const title = document.getElementById("notification-title").value;
+        const body = document.getElementById("notification-body").value;
+        const time = document.getElementById("notification-time").value;
+
+        if (!title || !body || !time) {
+          alert("Vui lòng điền đầy đủ thông tin!");
+          return;
+        }
+
+        const delay = new Date(time) - new Date(); // Tính thời gian chờ
+
+        if (delay < 0) {
+          alert("Thời gian phải ở tương lai!");
+          return;
+        }
+
+        if (navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({
+            type: "scheduleNotification",
+            title: title,
+            body: body,
+            delay: delay,
+          });
+          alert("Đã đặt lịch gửi thông báo!");
+        } else {
+          alert("Service Worker chưa được kích hoạt.");
+        }
+      }
+    </script>
+    <script></script>
+  </body>
+</html>
